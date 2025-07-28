@@ -1,0 +1,1002 @@
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Plinko Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    
+        /* Animasi Glow dan Bounce untuk tampilan futuristik */
+    @keyframes glowPulse {
+      0% { box-shadow: 0 0 5px red; }
+      50% { box-shadow: 0 0 20px #ff0077; }
+      100% { box-shadow: 0 0 5px #00ff99; }
+    }
+    @keyframes ballBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes slotGlow {
+      0%, 100% { box-shadow: 0 0 10px #ffcc00; }
+      50% { box-shadow: 0 0 20px #ffcc00; }
+    }
+  
+
+    .neon-button {
+      background: #00f0ff;
+      color: black;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .neon-button:hover {
+      background: #0ff;
+      box-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff;
+    }
+
+    .glow-border {
+      border: 2px solid #00f0ff;
+      box-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff inset;
+    }
+
+    .neon-button {
+      background: #00f0ff;
+      color: black;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    .neon-button:hover {
+      background: #0ff;
+      box-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff;
+    }
+    .fade-in {
+      animation: fadeIn 1s ease-in-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+   
+
+
+      body {
+        background: radial-gradient(circle at center, darkcyan, #07152a);
+        font-family: Arial, sans-serif;
+        color: black;
+        text-align: center;
+      }
+      .board {
+        position: relative;
+        width: 300px;
+        height: 420px;
+        z-index: 2;
+      }
+      .pin {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background-color: darkgray;
+        border-radius: 50%;
+      }
+          /* Modal untuk Riwayat Game */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: black(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .modal-content {
+      background-color: #1e2a47;
+      padding: 20px;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 600px;
+      text-align: left;
+      z-index: 1010;
+    }
+    
+    /* Styling riwayat game */
+    .history-list {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 20px;
+    }
+    
+    .history-item {
+      background-color: #333;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+      color: white;
+    }
+      .dropper {
+        position: absolute;
+        top: -20px;
+        left: 51%;
+        transform: translateX(-51%);
+        width: 30px;
+        height: 30px;
+        background-color: black;
+        border-radius: 40%;
+        z-index: 1;
+      }
+      .ball {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background-color: honeydew;
+        border-radius: 50%;
+        z-index: 2;
+        transition: top 0.2s ease-out;
+      }
+      .slot {
+        width: 33px;
+        height: 28px;
+        background-color: goldenrod;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        z-index: 3;
+        transition: transform 0.9s, box-shadow 0.8s;
+      }
+      .slot.glow {
+        transform: scale(1.2);
+        box-shadow: 0 0 10px yellow;
+      }
+      #boardWrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 30px;
+      }
+      #multiplierSlots {
+        margin-top: -70px;
+      }
+      #sidebar {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      #sidebar button {
+        padding: 2px;
+        font-weight: bold;
+        border-radius: 3px;
+      }
+  
+      /* Modal style */
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000; /* Ensure modal is on top */
+      }
+  
+      .modal-content {
+        background-color: #1e2a47;
+        padding: 20px;
+        border-radius: 10px;
+        width: 400px;
+        text-align: left;
+        z-index: 1010; /* Ensure content is on top of background */
+      }
+  
+      .modal input, .modal select {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0;
+        background-color: #333;
+        color: white;
+        border: 1px solid #444;
+        border-radius: 5px;
+      }
+  
+      .modal button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      /* Styling untuk tombol X */
+.close-button {
+  background: transparent;
+  color: white;
+  font-size: 30px;
+  font-weight: bold;
+  border: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+  </style>
+</head>  
+  <audio id="bounceSound" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" preload="auto"></audio>
+  <audio id="winSound" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" preload="auto"></audio>
+  <audio id="bgMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" preload="auto" loop></audio>
+<div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-90 z-50" id="loginScreen">
+  <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl shadow-xl w-full max-w-md glow-border">
+    <h2 class="text-cyan-400 text-2xl font-extrabold mb-6 text-center tracking-wide">Login / Registrasi</h2>
+    <label class="block text-sm text-cyan-300 mb-1">User Name</label>
+    <input class="w-full mb-3 p-2 rounded bg-black text-white glow-border" id="loginNama" placeholder="masukan username" type="text" />
+    <label class="block text-sm text-cyan-300 mb-1">Email</label>
+    <input class="w-full mb-3 p-2 rounded bg-black text-white glow-border" id="loginEmail" placeholder="Email aktif" type="email" />
+    <label class="block text-sm text-cyan-300 mb-1">Pilih Bank</label>
+    <select class="w-full mb-3 p-2 rounded bg-black text-white glow-border" id="loginBank">
+      <option value="">-- Pilih Bank --</option>
+      <option>DANA</option>
+      <option>OVO</option>
+      <option>GoPay</option>
+      <option>LinkAja</option>
+      <option>BRI</option>
+      <option>BCA</option>
+      <option>BNI</option>
+      <option>CIMB Niaga</option>
+    </select>
+    <label class="block text-sm text-cyan-300 mb-1">Nomor Bank</label>
+    <input class="w-full mb-3 p-2 rounded bg-black text-white glow-border" id="loginRekening" placeholder="Nomor rekening / no HP" type="text" />
+        <label class="block text-sm text-cyan-300 mb-1">Nama Pemilik rekening</label>
+    <input class="w-full mb-3 p-2 rounded bg-black text-white glow-border" id="loginNamapemilik rekening" placeholder="Nama pemilik rekening" type="text" />
+    <label class="block text-sm text-cyan-300 mb-1">Password</label>
+    <input class="w-full mb-3 p-2 rounded bg-black text-white glow-border" id="loginPassword" placeholder="Buat password" type="password" />
+    <label class="block text-sm text-cyan-300 mb-1">Konfirmasi Password</label>
+    <input class="w-full mb-5 p-2 rounded bg-black text-white glow-border" id="loginConfirm" placeholder="Ulangi password" type="password" />
+    
+    <button class="neon-button w-full py-2 rounded" onclick="loginUser()">Daftar</button>
+  </div>
+</div>
+
+
+    <h2 class="text-3xl font-bold mt-6 text-yellow-200">Ƥ𝐋เＮ𝕂ⓞ</h2>
+    
+    <!-- Sidebar with buttons -->
+    <div id="sidebar">
+      <button class="bg-blue-600 hover:bg-blue-300 text-white" onclick="openTopupModal()">Topup</button>
+     <button class="bg-green-600 hover:bg-green-300 text-white" onclick="openHistoryModal()">Histori Game</button>
+<button class="bg-red-600 text-white px-4 py-1 rounded text-xs w-25" onclick="showWithdrawForm()">Withdraw</button>
+      <button class="bg-purple-600 text-white px-4 py-1 rounded text-xs w-25" onclick="showSettingsForm()">Pengaturan</button>
+      
+
+      
+    </div>
+  
+    <div class="flex justify-center mt-4">
+      <div>
+        <div class="board" id="plinkoBoard">
+          <div class="dropper" id="dropPoint"></div>
+        </div>
+        <div id="multiplierSlots" class="flex justify-center gap-[1px] mt-2">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </div>
+  
+  <!-- Modal untuk Riwayat Game -->
+  <div class="modal" id="historyModal">
+    <div class="modal-content">
+      <h2 class="text-lg font-bold text-yellow-300">Histori Game</h2>
+      <div class="history-list" id="historyList">
+        <!-- Daftar riwayat permainan akan ditambahkan di sini -->
+      </div>
+      <button onclick="closeHistoryModal()" class="bg-red-600 text-white px-4 py-2 mt-4 rounded">Tutup</button>
+    </div>
+  </div>
+  
+
+  <!-- Modal for Topup -->
+  <div class="modal" id="topupModal">
+    <div class="modal-content">
+      <h2 class="text-lg font-bold text-yellow-300">Topup</h2>
+      
+      <!-- Step 1: Choose Bank -->
+      <label for="bankSelect" class="text-white">Pilih Bank</label>
+      <select id="bankSelect">
+        <option value="ovo">OVO</option>
+        <option value="Dana">Dana</option>
+        <option value="gopay">GoPay</option>
+        <option value="bri">BRI</option>
+        <option value="bca">BCA</option>
+        <option value="cimb">CIMB Niaga</option>
+        <option value="bni">BNI</option>
+        <option value="seabank">Seabank</option>
+      </select>
+      <div id="bankDetails" class="text-white mt-2">
+        <p><strong>Nomor Rekening Tujuan:</strong> <span id="accountNumber">-</span></p>
+        <button id="copyButton" class="bg-blue-500 text-white px-2 py-1 rounded mt-2" onclick="copyToClipboard()">Salin Nomor Rekening</button>
+      
+      </div>
+
+
+      <!-- Step 2: Choose Amount -->
+      <label for="topupAmount" class="text-white">Pilih Nominal Topup</label>
+      <select id="topupAmount">
+        <option value="40000">40.000</option>
+        <option value="50000">50.000</option>
+        <option value="80000">80.000</option>
+        <option value="100000">100.000</option>
+        <option value="150000">150.000</option>
+        <option value="200000">200.000</option>
+        <option value="250000">250.000</option>
+        <option value="300000">300.000</option>
+        <option value="350000">350.000</option>
+        <option value="400000">400.000</option>
+        <option value="450000">450.000</option>
+        <option value="500000">500.000</option>
+        <option value="550000">550.000</option>
+        <option value="600000">600.000</option>
+        <option value="650000">650.000</option>
+        <option value="700000">700.000</option>
+        <option value="750000">750.000</option>
+        <option value="800000">800.000</option>
+        <option value="850000">850.000</option>
+        <option value="900000">900.000</option>
+        <option value="950000">950.000</option>
+        <option value="1000000">1.000.000</option>
+      </select>
+
+      <!-- Step 3: Enter Sender's Name -->
+      <label for="senderName" class="text-white">Masukkan Nama Pengirim</label>
+      <input type="text" id="senderName" placeholder="Nama Pengirim" required>
+      
+      <!-- Step 4: Enter PIN -->
+      <label for="pinInput" class="text-white">Masukkan PIN</label>
+      <input type="password" id="pinInput" placeholder="PIN" required>
+      
+      <!-- Step 5: Upload Proof of Payment -->
+      <label for="paymentProof" class="text-white">Upload Bukti Pembayaran</label>
+      <input type="file" id="paymentProof" required>
+      
+      <!-- Step 6: Submit Button -->
+      <button onclick="submitTopup()" class="mt-4">Kirim</button>
+      <button onclick="backToGameMenu()" class="bg-yellow-600 text-white px-4 py-2 mt-4 rounded">Kembali ke Menu</button>
+      <!-- Step 7: Show status message after submission -->
+      <p id="statusMessage" class="text-white mt-4"></p>
+      </div>
+      </div>
+      <!-- Step 7: Show status message after submission -->
+      <p id="statusMessage" class="text-white mt-4"></p>
+    </div>
+  </div>
+
+
+  <div class="text-yellow-500 text-xl font-bold mt-4" id="winText">Win 0 FUN</div>
+  <h5><div class="text-xs text-black-400">Kredit  : Rp <span id="balance">100.00</span> </div></h5>
+  <button onclick="dropBall()" class="bg-yellow-100 hover:bg-yellow-500 text-black font-bold rounded-full w-24 h-24 text-2xl shadow-md mt-4">
+    SPIN
+  </button>
+
+  <div class="flex justify-center gap-6 mt-5 text-xs text-gray-300">
+    <div class="flex flex-col items-center">
+      <span class="mb-1 text-white">Risk Level</span>
+      <div class="flex gap-1">
+        <button class="px-2 py-1 rounded bg-red-500 text-white risk-btn">High</button>
+        <button class="px-2 py-1 rounded bg-yellow-500 text-white risk-btn">Normal</button>
+        <button class="px-2 py-1 rounded bg-green-500 text-white risk-btn">Low</button>
+      </div>
+    </div>
+    
+    <div class="flex flex-col items-center">
+      <span class="mb-1 text-white">Bet Mode</span>
+      <div class="flex gap-1">
+        <button class="px-2 py-1 rounded bg-indigo-500 text-white" onclick="autoCount = 0">Manual</button>
+        <button class="px-2 py-1 rounded bg-pink-500 text-white" onclick="autoPlayStart()">Auto</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-center items-center mt-3 gap-4 text-white">
+  <button class="bg-gray-600 px-3 py-1 rounded" onclick="minBet()">Min</button>
+  <button class="bg-gray-600 px-3 py-1 rounded" onclick="decreaseBet()">-</button>
+  <div class="text-sm">Bet <span id="betAmount">500</span> </div>
+  <button class="bg-gray-600 px-3 py-1 rounded" onclick="increaseBet()">+</button>
+  <button class="bg-gray-600 px-3 py-1 rounded" onclick="maxBet()">Max</button>
+</div>
+
+  </div>
+
+  <div class="mt-6 space-y-4 text-sm text-white px-4">
+    <div>
+      <button class="px-2 py-1 rounded bg-red-600 text-white" onclick="stopAutoPlay()">Stop</button>
+      <label for="autoCountSlider" class="block mb-1"> <span id="autoCountLabel"></span> </label>
+      <input type="range" id="autoCountSlider" min="1" max="50" value="10" class="w-full" />
+    </div>
+<p id="statusMessage" class="text-white mt-4"></p>
+
+    <div>
+      <h2 class="text-lg font-bold text-yellow-300">🎯 Win Log</h2>
+      <ul id="winLog" class="bg-black bg-opacity-30 rounded p-2 max-h-40 overflow-y-auto space-y-1 text-xs border border-yellow-500"></ul>
+    </div>
+  </div>
+<!-- Modal untuk Riwayat Game -->
+<div class="modal" id="historyModal">
+  <div class="modal-content">
+    <h2 class="text-lg font-bold text-yellow-300">Histori Game</h2>
+    <div class="history-list" id="historyList">
+      <!-- Daftar riwayat permainan akan ditambahkan di sini -->
+    </div>
+    <button onclick="closeHistoryModal()" class="bg-red-600 text-white px-4 py-2 mt-4 rounded">Tutup</button>
+  </div>
+</div>
+  <!-- FORM WITHDRAW -->
+  <div id="withdrawForm" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center hidden z-20">
+    <div class="bg-gray-900 p-6 rounded-lg w-80 space-y-4 text-left border border-yellow-400">
+      <h2 class="text-xl font-bold text-yellow-300 text-center">Form Penarikan</h2>
+      <div class="text-sm text-white">Saldo Game: <span id="withdrawBalance">0.00</span></div>
+      <select id="bankSelect" class="w-full p-2 rounded bg-gray-800 text-white">
+        <option value="">Pilih Bank</option>
+        <option>Dana</option>
+        <option>OVO</option>
+        <option>GoPay</option>
+        <option>SeaBank</option>
+        <option>CIMB Niaga</option>
+        <option>BRI</option>
+        <option>BCA</option>
+        <option>BNI</option>
+        <option>LinkAja</option>
+      </select>
+      <input type="text" id="namaBank" placeholder="Nama Pemilik Rekening" class="w-full p-2 rounded bg-gray-800 text-white" />
+      <input type="number" id="nominalTarik" placeholder="Nominal Penarikan (min. 100.000)" class="w-full p-2 rounded bg-gray-800 text-white" />
+      <input type="number" id="Nomor Rekening" placeholder="Nomor Rekening/ E ewalet" class="w-full p-4 rounded bg-gray-800 text-white" />
+      <input type="password" id="pinTarik" placeholder="PIN Pembayaran" class="w-full p-2 rounded bg-gray-800 text-white" />
+      <input type="password" id="passTarik" placeholder="Password Akun" class="w-full p-2 rounded bg-gray-800 text-white" />
+      
+      <div class="flex justify-between">
+        <button onclick="hideWithdrawForm()" class="bg-gray-600 text-white px-3 py-1 rounded">Kembali</button>
+        <button onclick="submitWithdraw()" class="bg-green-500 text-white px-3 py-1 rounded">Kirim</button>
+      </div>
+      <div id="withdrawStatus" class="text-xs text-yellow-400 mt-2 text-center"></div>
+      <div id="withdrawHistory" class="text-xs text-gray-400 mt-1 max-h-20 overflow-y-auto"></div>
+    </div>
+  </div>
+  
+    <!-- FORM PENGATURAN -->
+  <div id="settingsForm" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center hidden z-20">
+    <div class="bg-gray-900 p-6 rounded-lg w-80 space-y-4 text-left border border-yellow-400">
+      <h2 class="text-xl font-bold text-yellow-300 text-center">Pengaturan Akun</h2>
+      <div class="text-sm text-white">Saldo Game: <span id="settingsBalance">0.00</span></div>
+      <input type="text" id="namaUser" placeholder="Nama Pengguna" class="w-full p-2 rounded bg-gray-800 text-white" />
+      <select id="bankUser" class="w-full p-2 rounded bg-gray-800 text-white">
+        <option value="">Pilih Bank Pembayaran</option>
+        <option>Dana</option>
+        <option>OVO</option>
+        <option>GoPay</option>
+        <option>LinkAja</option>
+        <option>BRI</option>
+        <option>BCA</option>
+        <option>BNI</option>
+        <option>CIMB Niaga</option>
+      </select>
+      <input type="password" id="ubahPassword" placeholder="Ubah Password" class="w-full p-2 rounded bg-gray-800 text-white" />
+      <input type="password" id="ubahPIN" placeholder="Ubah PIN Pembayaran" class="w-full p-2 rounded bg-gray-800 text-white" />
+      <input type="email" id="ubahEmail" placeholder="Ubah Email" class="w-full p-2 rounded bg-gray-800 text-white" />
+
+      <div class="flex flex-col gap-2">
+        <a href="https://wa.me/6283847556444" target="_blank" class="bg-green-600 text-white px-3 py-2 text-center rounded">Hubungi Bantuan</a>
+  <button onclick="logout()" class="bg-red-600 w-full py-2 rounded text-white font-bold">Log Out</button>
+  
+        <button onclick="simpanPengaturan()" class="bg-blue-500 text-white px-3 py-2 rounded">Simpan Data</button>
+        <button onclick="hideSettingsForm()" class="bg-gray-600 text-white px-3 py-2 rounded">Kembali</button>
+      </div>
+      <div id="settingsStatus" class="text-xs text-yellow-400 mt-2 text-center"></div>
+    </div>
+  </div>
+
+  
+  <script>
+
+  // Update nomor rekening ketika memilih bank
+document.getElementById("bankSelect").addEventListener("change", updateBankDetails);
+let gameHistory = JSON.parse(localStorage.getItem("gameHistory")) || [];
+
+    // Fungsi untuk menampilkan modal riwayat game
+    function openHistoryModal() {
+      document.getElementById("historyModal").style.display = "flex";
+      displayHistory();
+    }
+
+    // Fungsi untuk menutup modal riwayat game
+    function closeHistoryModal() {
+      document.getElementById("historyModal").style.display = "none";
+    }
+
+function displayHistory() {
+  const historyList = document.getElementById("historyList");
+  const logs = JSON.parse(localStorage.getItem("winLogs") || "[]");
+
+  historyList.innerHTML = "";
+  if (logs.length === 0) {
+    historyList.innerHTML = "<div class='text-white'>Belum ada riwayat permainan.</div>";
+    return;
+  }
+
+  logs.forEach(log => {
+    const div = document.createElement("div");
+    div.className = "history-item";
+    div.innerText = log;
+    historyList.appendChild(div);
+  });
+}
+
+
+
+// Fungsi untuk membuka modal topup
+function openTopupModal() {
+  document.getElementById("topupModal").style.display = "flex"; // Menampilkan modal topup
+  document.getElementById("mainMenu").style.display = "none"; // Menyembunyikan menu permainan
+}
+
+// Fungsi untuk menutup modal topup
+function closeTopupModal() {
+  document.getElementById("topupModal").style.display = "none"; // Menyembunyikan modal topup
+  document.getElementById("mainMenu").style.display = "block"; // Menampilkan kembali menu permainan
+}
+
+// Fungsi untuk kembali ke menu permainan dari modal topup
+function backToGameMenu() {
+  document.getElementById("topupModal").style.display = "none"; // Menyembunyikan modal topup
+  document.getElementById("mainMenu").style.display = "block"; // Menampilkan kembali menu permainan
+}
+  
+// Fungsi untuk menutup modal riwayat game
+function closeHistoryModal() {
+  document.getElementById("historyModal").style.display = "none";
+}
+
+
+  window.onload = function() {
+    const isLoggedIn = localStorage.getItem("isLoggedIn");
+    if (isLoggedIn === 'true') {
+      document.getElementById("loginScreen").style.display = "none"; // Sembunyikan layar login
+    } else {
+      document.getElementById("loginScreen").style.display = "flex"; // Tampilkan layar login
+    }
+  };
+
+  // Fungsi untuk login dan simpan data pengguna ke localStorage
+  function loginUser() {
+    const nama = document.getElementById("loginNama").value.trim();
+    const email = document.getElementById("loginEmail").value.trim();
+    const bank = document.getElementById("loginBank").value.trim();
+    const rekening = document.getElementById("loginRekening").value.trim();
+    const password = document.getElementById("loginPassword").value.trim();
+
+    if (!nama || !email || !bank || !rekening || !password) {
+      alert("Semua data wajib diisi!");
+      return;
+    }
+
+    // Simpan data login ke localStorage
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("nama", nama);
+    localStorage.setItem("email", email);
+    localStorage.setItem("bank", bank);
+    localStorage.setItem("rekening", rekening);
+    localStorage.setItem("password", password);
+    
+    // Sembunyikan login screen
+    document.getElementById("loginScreen").style.display = "none";
+    document.body.classList.remove("overflow-hidden");
+
+    // Bisa menambahkan redirect ke halaman game atau dashboard
+    console.log("Login otomatis berhasil:", nama);
+  }
+
+  // Fungsi logout, untuk menghapus data login
+  function logoutUser() {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("nama");
+    localStorage.removeItem("email");
+    localStorage.removeItem("bank");
+    localStorage.removeItem("rekening");
+    localStorage.removeItem("password");
+
+    alert("Anda telah keluar. Kembali ke form login.");
+    location.reload();
+  }
+
+
+// Fungsi untuk mengupdate nomor rekening sesuai bank yang dipilih
+function updateBankDetails() {
+  const bank = document.getElementById("bankSelect").value;
+  const accountNumber = document.getElementById("accountNumber");
+
+
+  switch (bank) {
+    case 'ovo':
+      accountNumber.innerText = '083847556444';
+      break;
+   case 'Dana':
+   accountNumber.innerText = '083847556444';
+    break;
+    case 'gopay':
+      accountNumber.innerText = '083847556444';
+      break;
+    case 'bri':
+      accountNumber.innerText = '377501057405530';
+      break;
+    case 'bca':
+      accountNumber.innerText = '3901083847556444';
+      break;
+    case 'cimb':
+      accountNumber.innerText = '8059083847556444';
+      break;
+    case 'bni':
+      accountNumber.innerText = '8810083847556444';
+      break;
+    case 'seabank':
+      accountNumber.innerText = '901119135639';
+      break;
+    default:
+      accountNumber.innerText = '-';
+  }
+}
+function copyToClipboard() {
+  const accountNumber = document.getElementById("accountNumber").innerText;
+  navigator.clipboard.writeText(accountNumber)
+    .then(() => alert("Nomor rekening telah disalin!"))
+    .catch(err => alert("Gagal menyalin nomor rekening: " + err));
+}
+    const rewardTables = {
+      low: [0.2, 0.4, 0.5, 0.7, 1.0, 1.4, 2.0, 5.2, 14],
+      normal: [0.2, 0.4, 0.5, 1.4, 5.2, 14, 20, 10, 0.2],
+      high: [0, 0.2, 0.4, 1.4, 100, 20, 1000, 50, 0]
+    };
+    let autoPlayStopped = false;
+
+    function stopAutoPlay() {
+      autoPlayStopped = true;
+    }
+
+        let balance = parseFloat(localStorage.getItem("plinko_balance")) || 100.00;
+    const customBets = [500, 600, 700, 800, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 15000, 16000, 17000];
+for (let i = 18000; i <= 1000000; i += 1000) {
+  customBets.push(i);
+}
+
+let betIndex = 0;
+let bet = customBets[betIndex];
+
+function updateDisplay() {
+  const betAmountEl = document.getElementById("betAmount");
+  const balanceEl = document.getElementById("balance");
+  if (betAmountEl) betAmountEl.innerText = bet.toLocaleString();
+  if (balanceEl) balanceEl.innerText = balance.toFixed(2);
+  localStorage.setItem("plinko_balance", balance.toFixed(2));
+}
+
+function minBet() {
+  betIndex = 10000;
+  bet = customBets[betIndex];
+  updateDisplay();
+}
+
+function maxBet() {
+  betIndex = customBets.length - 1;
+  bet = customBets[betIndex];
+  updateDisplay();
+}
+
+function increaseBet() {
+  if (betIndex < customBets.length - 1) {
+    betIndex++;
+    bet = customBets[betIndex];
+    updateDisplay();
+  }
+}
+
+function decreaseBet() {
+  if (betIndex > 10000) {
+    betIndex--;
+    bet = customBets[betIndex];
+    updateDisplay();
+  }
+}
+let risk = "normal";
+let autoCount = 100.000;
+    // Open topup modal
+    function openTopupModal() {
+      document.getElementById("topupModal").style.display = "flex";
+    }
+    function logout() {
+  if (confirm("Yakin ingin keluar?")) {
+    localStorage.removeItem("saldo");
+    localStorage.clear();
+    location.reload();
+  }
+}
+// Close topup modal
+function closeTopupModal() {
+  document.getElementById("topupModal").style.display = "none";
+}    // Submit topup and simulate delay
+    function submitTopup() {
+      const bank = document.getElementById("bankSelect").value;
+      const amount = document.getElementById("topupAmount").value;
+      const senderName = document.getElementById("senderName").value;
+      const pin = document.getElementById("pinInput").value;
+      const proof = document.getElementById("paymentProof").files[0];
+
+      if (!senderName || !pin || !proof) {
+        alert("Harap isi semua data!");
+        return;
+      }
+      
+         
+      // Simulate a 15 second waiting time
+        // Tampilkan pesan "Topup sedang diperiksa"
+  document.getElementById("statusMessage").innerText = `SEDANG DIPERIKSA HARAP TUNGGU YA BOSKU....`;
+  
+  // Simulasikan waktu pemeriksaan (15 detik)
+  setTimeout(() => {
+    // Tambahkan saldo ke akun setelah 15 detik
+    balance += parseFloat(amount); // Tambahkan saldo sesuai jumlah topup
+    updateDisplay(); // Perbarui tampilan saldo
+    
+    // Tampilkan pesan "Topup berhasil, silakan bermain"
+    document.getElementById("statusMessage").innerText = `Topup berhasil! Saldo bertambah Rp ${amount}. Silakan bermain!`;
+    
+    // Sembunyikan modal setelah topup berhasil
+    closeTopupModal();
+  }, 15000); // 15 detik
+  }
+function showWithdrawForm() {
+      document.getElementById("withdrawBalance").innerText = balance.toFixed(2);
+      document.getElementById("withdrawForm").classList.remove("hidden");
+    }
+    function hideWithdrawForm() {
+      document.getElementById("withdrawForm").classList.add("hidden");
+    }
+    
+
+    function submitWithdraw() {
+      const nominal = parseFloat(document.getElementById("nominalTarik").value);
+      const statusEl = document.getElementById("withdrawStatus");
+      if (isNaN(nominal) || nominal < 100000) {
+        statusEl.innerText = "Minimal penarikan Rp100.000";
+        return;
+      }
+      statusEl.innerText = "Penarikan sedang diproses...";
+      setTimeout(() => {
+        document.getElementById("withdrawHistory").innerHTML += `<div>Penarikan Rp${nominal.toLocaleString()} sedang diproses...</div>`;
+        statusEl.innerText = "";
+      }, 3000);
+    }
+function showSettingsForm() {
+      document.getElementById("settingsForm").classList.remove("hidden");
+      document.getElementById("settingsBalance").innerText = balance.toFixed(2);
+
+      // Load saved data
+      document.getElementById("namaUser").value = localStorage.getItem("namaUser") || "";
+      document.getElementById("bankUser").value = localStorage.getItem("bankUser") || "";
+      document.getElementById("ubahPassword").value = localStorage.getItem("ubahPassword") || "";
+      document.getElementById("ubahPIN").value = localStorage.getItem("ubahPIN") || "";
+      document.getElementById("ubahEmail").value = localStorage.getItem("ubahEmail") || "";
+    }
+    function hideSettingsForm() {
+      document.getElementById("settingsForm").classList.add("hidden");
+    }
+    function simpanPengaturan() {
+      localStorage.setItem("namaUser", document.getElementById("namaUser").value);
+      localStorage.setItem("bankUser", document.getElementById("bankUser").value);
+      localStorage.setItem("ubahPassword", document.getElementById("ubahPassword").value);
+      localStorage.setItem("ubahPIN", document.getElementById("ubahPIN").value);
+      localStorage.setItem("ubahEmail", document.getElementById("ubahEmail").value);
+
+      document.getElementById("settingsStatus").innerText = "✅ Data berhasil disimpan.";
+    }
+    function logoutUser() {
+      alert("Anda telah keluar. Kembali ke form login.");
+      location.reload();
+    }
+    const board = document.getElementById("plinkoBoard");
+    const pinSpacing = 25;
+    const pinOffset = board.offsetWidth / 2;
+    const numRows = 12;
+    const slotXPositions = [15, 45, 75, 105, 135, 165, 195, 225, 255];
+    const winLogEl = document.getElementById("winLog");
+
+    document.getElementById("autoCountSlider").addEventListener("input", e => {
+      autoCount = parseInt(e.target.value);
+      document.getElementById("autoCountLabel").innerText = autoCount;
+    });
+
+    function updateDisplay() {
+      document.getElementById("balance").innerText = balance.toFixed(2);
+      document.getElementById("betAmount").innerText = bet.toFixed(2);
+      localStorage.setItem("plinko_balance", balance.toFixed(2));
+    }
+
+    function updateMultiplierSlots() {
+      const rewards = rewardTables[risk];
+      const container = document.getElementById("multiplierSlots");
+      container.innerHTML = "";
+      rewards.forEach((val, i) => {
+        const div = document.createElement("div");
+        div.className = `slot ${getSlotColor(val)}`;
+        div.innerText = `x${val}`;
+        container.appendChild(div);
+      });
+    }
+
+    function getSlotColor(multiplier) {
+      if (multiplier >= 14) return "bg-red-600";
+      if (multiplier >= 5) return "bg-orange-500";
+      if (multiplier >= 1.4) return "bg-green-600";
+      return "bg-green-500";
+    }
+
+    function glowSlot(index) {
+      const slots = document.querySelectorAll("#multiplierSlots .slot");
+      slots.forEach(s => s.classList.remove("glow"));
+      if (slots[index]) {
+        slots[index].classList.add("glow");
+        setTimeout(() => slots[index].classList.remove("glow"), 800);
+      }
+    }
+
+    function getSlotColor(multiplier) {
+      if (multiplier >= 14) return "bg-red-600";
+      if (multiplier >= 5) return "bg-orange-500";
+      if (multiplier >= 1.4) return "bg-green-600";
+      return "bg-green-500";
+    }
+
+    function glowSlot(index) {
+      const slots = document.querySelectorAll("#multiplierSlots .slot");
+      slots.forEach(s => s.classList.remove("glow"));
+      if (slots[index]) {
+        slots[index].classList.add("glow");
+        setTimeout(() => slots[index].classList.remove("glow"), 800);
+      }
+    }
+
+    function addWinLog(amount) {
+  const time = new Date().toLocaleTimeString();
+  const logText = `Win ${amount.toFixed(2)} FUN at ${time}`;
+  // Tampilkan di UI (real-time)
+  const li = document.createElement("li");
+  li.textContent = logText;
+  winLogEl.prepend(li);
+
+  // Simpan ke localStorage
+  const logs = JSON.parse(localStorage.getItem("winLogs") || "[]");
+  logs.unshift(logText);
+  if (logs.length > 100) logs.pop(); // Maksimal 100 data
+  localStorage.setItem("winLogs", JSON.stringify(logs));
+}
+
+     // Fungsi untuk membuat bola jatuh dengan animasi
+ async function dropBall() {
+   if (balance < bet) return alert("Saldo tidak cukup!");
+   const ball = document.createElement("div");
+   ball.className = "ball";
+   function dropBall() {
+  const sound = document.getElementById("dropSound");
+  if (sound) {
+    sound.currentTime = 0;
+    sound.play().catch(e => {
+      console.warn("Audio gagal diputar:", e);
+    });
+  }
+
+  // ...lanjutkan logika bola jatuh
+}
+
+   let x = board.offsetWidth / 2;
+   let y = 0;
+   let position = 4; // Mulai di posisi tengah
+   ball.style.left = `${x}px`;
+   ball.style.top = `${y}px`;
+   board.appendChild(ball);
+   balance -= bet;
+   updateDisplay();
+   
+   let step = 0;
+   const rewardList = rewardTables[risk];
+   
+   return new Promise(resolve => {
+     const interval = setInterval(() => {
+       if (step >= numRows) {
+         clearInterval(interval);
+         position = Math.max(0, Math.min(8, position));
+         const finalX = slotXPositions[position];
+         ball.style.left = `${finalX}px`; // Posisi X bola tetap di slot yang sesuai
+         const prize = rewardList[position] || 0;
+         balance += prize;
+         updateDisplay();
+         document.getElementById("winText").innerText = `Win ${prize.toFixed(2)} FUN`;
+         glowSlot(position);
+         addWinLog(prize);
+         resolve();
+         return;
+       }
+       try {
+  bounceSound.currentTime = 0;
+  bounceSound.play();
+} catch (err) {
+  console.warn('bounceSound error:', err);
+}
+       const moveLeft = Math.random() < 0.5;
+       position += moveLeft ? -1 : 1;
+       position = Math.max(0, Math.min(8, position)); // Membatasi posisi bola
+       x += (moveLeft ? -1 : 1) * (pinSpacing / 2);
+       y += 30; // Bola jatuh ke bawah
+       
+       ball.style.left = `${x}px`;
+       ball.style.top = `${y}px`;
+       step++;
+       
+     }, 100); // Kecepatan animasi bola
+   });
+ }
+ async function autoPlayStart() {
+   autoPlayStopped = false;
+   let count = autoCount;
+   while (count > 0 && balance >= bet && !autoPlayStopped) {
+     await dropBall();
+     count--;
+   }
+ }
+const bounceSound = document.getElementById("bounceSound");
+  const winSound = document.getElementById("winSound");
+
+    document.querySelectorAll(".risk-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const text = btn.textContent.trim().toLowerCase();
+        if (["high", "normal", "low"].includes(text)) {
+          risk = text;
+          document.querySelectorAll(".risk-btn").forEach(b => b.classList.remove("ring-2", "ring-white"));
+          btn.classList.add("ring-2", "ring-white");
+          updateMultiplierSlots();
+        }
+      });
+    });
+
+    // Generate pins
+    for (let row = 0; row < numRows; row++) {
+      for (let col = 0; col <= row; col++) {
+        const pin = document.createElement("div");
+        pin.className = "pin";
+        const x = pinOffset - (row * pinSpacing / 2) + col * pinSpacing;
+        const y = row * 30;
+        pin.style.left = `${x}px`;
+        pin.style.top = `${y}px`;
+        board.appendChild(pin);
+      }
+    }
+updateMultiplierSlots();
+
+    updateMultiplierSlots();
+    updateDisplay();
+    simulateGame()
+  </script>
+  
+</body>
+</html>
+</html>
+
+
